@@ -8,9 +8,9 @@
 
 ## About This Repository
 
-This repository is the central home for all community-built Morpheus plugins developed by HPE. Each plugin lives in its own subdirectory and targets one or more HPE Morpheus editions (VM Essentials, Enterprise, or Advanced) and use-cases.
+This repository is the central home for all community-built Morpheus plugins developed by HPE. Each plugin lives in its own subdirectory and targets one or more HPE Morpheus Software editions (VM Essentials, Enterprise, or Advanced) and use-cases.
 
-Plugins here are developed to fill gaps not covered by native Morpheus functionality or official HPE integrations — things like custom dashboards, third-party monitoring integrations, approval workflows, and more.
+Plugins here are developed to fill gaps not covered by native functionality or official HPE integrations — things like custom dashboards, third-party monitoring integrations, approval workflows, and more.
 
 ---
 

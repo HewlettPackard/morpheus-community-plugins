@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText:  Copyright Hewlett Packard Enterprise Development LP
+
 package com.morpheusdata.dashboard
 
 import com.morpheusdata.core.Plugin

@@ -3,10 +3,6 @@
 package com.morpheusdata.dashboard
 
 import com.morpheusdata.response.ServiceResponse
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
-import javax.net.ssl.HttpsURLConnection
-import java.net.Proxy
 
 /**
  * Shared Prometheus query logic for the Prometheus Dashboard plugin.

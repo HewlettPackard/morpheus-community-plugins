@@ -69,3 +69,8 @@ shadowJar {
 
 tasks.assemble.dependsOn tasks.shadowJar
 
+tasks.register('publishToPlugins', Copy) {
+    dependsOn tasks.shadowJar
+    from(tasks.shadowJar.archiveFile)
+    into layout.projectDirectory.dir('../plugins')
+}

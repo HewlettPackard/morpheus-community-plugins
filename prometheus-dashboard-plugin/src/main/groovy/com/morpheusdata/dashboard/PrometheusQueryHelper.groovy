@@ -49,7 +49,7 @@ class PrometheusQueryHelper{
             // Return early if there's config missing
             List<String> missing = missingRequiredConfig()
             if (missing) {
-                _log.get()?.warn("Prometheus dashboard config missing required fields: ${missing.join(', ')}. Returing empty dashboard.")
+                _log.get()?.warn("Prometheus dashboard config missing required fields: ${missing.join(', ')}. Returning empty dashboard.")
                 return ServiceResponse.success(emptyDashboard())
             }
 
@@ -67,7 +67,6 @@ class PrometheusQueryHelper{
             // Align 'now' to prevent end time drift across charts
             long now = (System.currentTimeMillis() / 1000L / step) * step
             long start = now - rangeSeconds
-            }
             
             // Row 1 - Instance Info
             List<Map> cpuSeries      = qr('rate(libvirt_domain_info_cpu_time_seconds_total[5m])', start, now, step)
@@ -202,13 +201,13 @@ class PrometheusQueryHelper{
             String enc = URLEncoder.encode(promql, 'UTF-8')
             String url = "https://${host()}:${port()}/api/v1/query?query=${enc}"
             def resp = httpGet(url)
-            return (resp?.data?.result ?: []).collect{series ->
+            return (resp?.data?.result ?: []).collect { series ->
                 String label = series.metric?."${labelField}" ?: (series.metric?.toString() ?: 'unknown')
                 double value = (series.value[1] as String).toDouble()
-                [label=label, value: value]
+                [label: label, value: value]
             }
         } catch (Exception e) {
-            _log.get().warn("Prometheus instant query failed: ${e.message}")
+            _log.get()?.warn("Prometheus instant query failed: ${e.message}")
             return []
         }
     }
@@ -326,7 +325,7 @@ class PrometheusQueryHelper{
     private static Map<String, Object> emptyDashboard() {
         String e = noDataSvg()
         [
-            timestamp: new Date().format('yyyy-MM-dd HH:mm:ss')
+            timestamp: new Date().format('yyyy-MM-dd HH:mm:ss'),
             cpuChartSvg: e, memUsageChartSvg: e, storageChartSvg: e,
             memAllocatedSvg: e, vcpuSvg: e,
             netTrafficSvg: e, netPacketsSvg: e, netDropsSvg: e, netErrorsSvg: e,
@@ -521,7 +520,7 @@ class PrometheusQueryHelper{
             void checkClientTrusted(java.security.cert.X509Certificate[] c, String a) {}
             void checkServerTrusted(java.security.cert.X509Certificate[] c, String a) {}
         }] as javax.net.ssl.TrustManager[]
-        def sc = java.net.ssl.SSLContext.getInstance('SSL')
+        def sc = javax.net.ssl.SSLContext.getInstance('SSL')
         sc.init(null, trustAll, new java.security.SecureRandom())
         javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory())
         javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier({ h, s -> true } as javax.net.ssl.HostnameVerifier)

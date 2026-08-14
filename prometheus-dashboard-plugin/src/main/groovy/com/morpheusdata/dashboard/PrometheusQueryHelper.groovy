@@ -6,7 +6,7 @@ import com.morpheusdata.response.ServiceResponse
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import javax.net.ssl.HttpsURLConnection
+import java.net.HttpURLConnection
 import java.net.URL
 import java.net.Proxy
 
@@ -56,7 +56,7 @@ class PrometheusQueryHelper{
             disableSslVerification()
             
             long rangeSeconds
-            long step
+            int step
 
             switch (timeRange) {
                 case '6h': rangeSeconds = 21600L; step = 300; break
@@ -126,18 +126,17 @@ class PrometheusQueryHelper{
     // Dashboard section builders
     private static Map<String, Object> fetchNodeExporterSection(long now, long chartStart, int chartStep) {
         try {
-            double uptime     = qiSingle("node_time_seconds{instance=\"${node()}\",job=\"${job()}\"} - node_boot_time_seconds{instance=\"${node()}\",job=\"${job()}\"}")
-            double cpuCores   = qiSingle("count(count(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}) by (cpu))")
-            double cpuBusy    = qiSingle("(sum by(instance) (irate(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\", mode!=\"idle\"}[5m])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}[5m])))) * 100")
-            double load5m     = qiSingle("avg(node_load5{instance=\"${node()}\",job=\"${job()}\"}) / count(count(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}) by (cpu)) * 100")
-            double load15m    = qiSingle("avg(node_load15{instance=\"${node()}\",job=\"${job()}\"}) / count(count(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}) by (cpu)) * 100")
-            double rootFsSize = qiSingle("node_filesystem_size_bytes{instance=\"${node()}\",job=\"${job()}\",mountpoint=\"/\",fstype!=\"rootfs\"}")
-            double rootFsUsed = qiSingle("100 - ((node_filesystem_avail_bytes{instance=\"${node()}\",job=\"${job()}\",mountpoint=\"/\",fstype!=\"rootfs\"} * 100) / node_filesystem_size_bytes{instance=\"${node()}\",job=\"${job()}\",mountpoint=\"/\",fstype!=\"rootfs\"})")
-            double ramSize    = qiSingle("node_memory_MemTotal_bytes{instance=\"${node()}\",job=\"${job()}\"}")
-            double ramUsed    = qiSingle("100 - ((node_memory_MemAvailable_bytes{instance=\"${node()}\",job=\"${job()}\"} * 100) / node_memory_MemTotal_bytes{instance=\"${node()}\",job=\"${job()}\"})")
-            double swapSize   = qiSingle("node_memory_SwapTotal_bytes{instance=\"${node()}\",job=\"${job()}\"}")
-            double swapUsed   = qiSingle("((node_memory_SwapTotal_bytes{instance=\"${node()}\",job=\"${job()}\"} - node_memory_SwapFree_bytes{instance=\"${node()}\",job=\"${job()}\"}) / (node_memory_SwapTotal_bytes{instance=\"${node()}\",job=\"${job()}\"})) * 100")
-
+            double uptime     = qiSingle("node_time_seconds{instance=\"${node()}\",job=\"${job()}\"} - node_boot_time_seconds{instance=\"${node()}\",job=\"${job()}\"}") ?: 0.0
+            double cpuCores   = qiSingle("count(count(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}) by (cpu))") ?: 0.0
+            double cpuBusy    = qiSingle("(sum by(instance) (irate(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\", mode!=\"idle\"}[5m])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}[5m])))) * 100") ?: 0.0
+            double load5m     = qiSingle("avg(node_load5{instance=\"${node()}\",job=\"${job()}\"}) / count(count(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}) by (cpu)) * 100") ?: 0.0
+            double load15m    = qiSingle("avg(node_load15{instance=\"${node()}\",job=\"${job()}\"}) / count(count(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}) by (cpu)) * 100") ?: 0.0
+            double rootFsSize = qiSingle("node_filesystem_size_bytes{instance=\"${node()}\",job=\"${job()}\",mountpoint=\"/\",fstype!=\"rootfs\"}") ?: 0.0
+            double rootFsUsed = qiSingle("100 - ((node_filesystem_avail_bytes{instance=\"${node()}\",job=\"${job()}\",mountpoint=\"/\",fstype!=\"rootfs\"} * 100) / node_filesystem_size_bytes{instance=\"${node()}\",job=\"${job()}\",mountpoint=\"/\",fstype!=\"rootfs\"})") ?: 0.0
+            double ramSize    = qiSingle("node_memory_MemTotal_bytes{instance=\"${node()}\",job=\"${job()}\"}") ?: 0.0
+            double ramUsed    = qiSingle("100 - ((node_memory_MemAvailable_bytes{instance=\"${node()}\",job=\"${job()}\"} * 100) / node_memory_MemTotal_bytes{instance=\"${node()}\",job=\"${job()}\"})") ?: 0.0
+            double swapSize   = qiSingle("node_memory_SwapTotal_bytes{instance=\"${node()}\",job=\"${job()}\"}") ?: 0.0
+            double swapUsed   = qiSingle("((node_memory_SwapTotal_bytes{instance=\"${node()}\",job=\"${job()}\"} - node_memory_SwapFree_bytes{instance=\"${node()}\",job=\"${job()}\"}) / (node_memory_SwapTotal_bytes{instance=\"${node()}\",job=\"${job()}\"})) * 100") ?: 0.0
             def cpuChart = buildMultiLineSvg([
                 [label: 'system', points: qrSingle("sum by(instance) (irate(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\", mode=\"system\"}[5m])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}[5m])))", chartStart, now, chartStep)],
                 [label: 'user',   points: qrSingle("sum by(instance) (irate(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\", mode=\"user\"}[5m])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"${node()}\",job=\"${job()}\"}[5m])))", chartStart, now, chartStep)],
@@ -188,6 +187,7 @@ class PrometheusQueryHelper{
                 nodeJob           : job() ?: 'N/A',
             ]
         } catch (Exception e) {
+            _log.get()?.warn("Node exporter section failed (instance=${node()}, job=${job()}): ${e.message}")
             return emptyNodeSection()
         }
     }
@@ -199,7 +199,7 @@ class PrometheusQueryHelper{
     private static List<Map> qi(String promql, String labelField = 'domain') {
         try {
             String enc = URLEncoder.encode(promql, 'UTF-8')
-            String url = "https://${host()}:${port()}/api/v1/query?query=${enc}"
+            String url = "http://${host()}:${port()}/api/v1/query?query=${enc}"
             def resp = httpGet(url)
             return (resp?.data?.result ?: []).collect { series ->
                 String label = series.metric?."${labelField}" ?: (series.metric?.toString() ?: 'unknown')
@@ -217,7 +217,7 @@ class PrometheusQueryHelper{
     private static Double qiSingle(String promql) {
         try {
             String enc = URLEncoder.encode(promql, 'UTF-8')
-            String url = "https://${host()}:${port()}/api/v1/query?query=${enc}"
+            String url = "http://${host()}:${port()}/api/v1/query?query=${enc}"
             def resp = httpGet(url)
             def result = resp?.data?.result
             if (result && result.size() > 0 && result[0]?.value)
@@ -233,7 +233,7 @@ class PrometheusQueryHelper{
     private static List<Map> qr(String promql, long start, long end, int step, String labelField = 'domain') {
         try {
             String enc = URLEncoder.encode(promql, 'UTF-8')
-            String url = "https://${host()}:${port()}/api/v1/query_range?query=${enc}&start=${start}&end=${end}&step=${step}"
+            String url = "http://${host()}:${port()}/api/v1/query_range?query=${enc}&start=${start}&end=${end}&step=${step}"
             def resp = httpGet(url)
             return (resp?.data?.result ?: []).collect{ series ->
                 String label = series.metric?."${labelField}" ?: (series.metric?.toString() ?: 'unknown')
@@ -255,7 +255,7 @@ class PrometheusQueryHelper{
     private static List<Map> qrSingle(String promql, long start, long end, int step) {
         try {
             String enc = URLEncoder.encode(promql, 'UTF-8')
-            String url = "https://${host()}:${port()}/api/v1/query_range?query=${enc}&start=${start}&end=${end}&step=${step}"
+            String url = "http://${host()}:${port()}/api/v1/query_range?query=${enc}&start=${start}&end=${end}&step=${step}"
             def resp = httpGet(url)
             def result = resp?.data?.result
             if (result && result.size() > 0 && result[0]?.values) {
@@ -277,9 +277,9 @@ class PrometheusQueryHelper{
 
     // --HTTP helper----------------------------------------
     private static def httpGet(String url){
-        HttpsURLConnection conn
+        HttpURLConnection conn
         try{
-            conn = new URL(url).openConnection(Proxy.NO_PROXY) as HttpsURLConnection
+            conn = new URL(url).openConnection(Proxy.NO_PROXY) as HttpURLConnection
             conn.setRequestMethod('GET')
             conn.setConnectTimeout(8_000)
             conn.setReadTimeout(8_000)
@@ -302,7 +302,6 @@ class PrometheusQueryHelper{
     private static List<String> missingRequiredConfig() {
         List<String> missing = []
         if (!host()?.trim()) missing << 'host'
-        if (!pass()?.trim()) missing << 'pass'
         if (!node()?.trim()) missing << 'node'
         return missing
     }

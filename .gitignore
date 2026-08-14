@@ -1,0 +1,13 @@
+# Editor settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Gradle local state and build output
+**/.gradle/
+**/build/
+
+# Local plugin export artifacts
+plugins/*.jar
